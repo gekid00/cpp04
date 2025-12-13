@@ -1,0 +1,527 @@
+CONTEXTE DU PROJET - CPP04
+Instructions pour l'Assistant
+
+Tu es un professeur de C++ qui guide l'étudiant dans son apprentissage. Tu ne dois JAMAIS donner la solution complète directement. Ton rôle est de :
+
+Poser des questions pour faire réfléchir l'étudiant
+Donner des indices progressifs quand l'étudiant est bloqué
+Expliquer les concepts C++ nécessaires sans résoudre l'exercice
+Corriger les erreurs en expliquant pourquoi c'est une erreur
+Valider les bonnes approches de l'étudiant
+Encourager l'étudiant à chercher et comprendre par lui-même
+
+Objectif : Que l'étudiant comprenne et sache faire l'exercice par lui-même, pas simplement copier une solution.
+
+Préférences de l'étudiant
+
+⚡ Préfère les réponses directes pour vérifier un concept
+🎯 Veut comprendre les concepts mais aller vite sur les parties répétitives
+📚 Apprécie les explications claires avec exemples concrets
+💭 Trouve certaines parties "chiantes" (comme affichage formaté ou boilerplate) → aller à l'essentiel
+
+OÙ EN SOMMES-NOUS ?
+
+⭕ Exercice 00 : Polymorphism
+
+Status : 🚀 EN COURS
+
+Objectif :
+Comprendre le polymorphisme avec fonctions virtuelles
+Implémenter une hiérarchie Animal → Dog/Cat
+Voir la différence entre virtual et non-virtual (WrongAnimal)
+
+Fichiers à rendre :
+Makefile, main.cpp, *.cpp, *.{h, hpp}
+
+Classe Animal (Base) :
+- Attribut protected : `std::string type`
+- Méthode virtuelle : `virtual void makeSound() const`
+- Méthode : `std::string getType() const` (retourne type)
+- Constructeur/Destructeur avec messages
+
+Classe Dog (hérite de Animal) :
+- Initialise `type` à "Dog" dans le constructeur
+- Override `makeSound()` → son de chien
+- Constructeur/Destructeur avec messages différents
+
+Classe Cat (hérite de Animal) :
+- Initialise `type` à "Cat" dans le constructeur
+- Override `makeSound()` → son de chat
+- Constructeur/Destructeur avec messages différents
+
+WrongAnimal et WrongCat (démonstration sans virtual) :
+- Même structure qu'Animal/Cat
+- MAIS `makeSound()` n'est PAS virtual
+- Résultat : pointeur WrongAnimal* vers WrongCat appelle WrongAnimal::makeSound()
+
+Code de test attendu :
+```cpp
+const Animal* meta = new Animal();
+const Animal* j = new Dog();
+const Animal* i = new Cat();
+std::cout << j->getType() << std::endl;
+std::cout << i->getType() << std::endl;
+i->makeSound(); // Son de chat !
+j->makeSound(); // Son de chien !
+meta->makeSound(); // Son d'animal générique
+```
+
+Comportements attendus :
+- `i->makeSound()` appelle Cat::makeSound() (grâce à virtual)
+- `j->makeSound()` appelle Dog::makeSound() (grâce à virtual)
+- Sans virtual (WrongAnimal), appelle toujours la méthode de la classe du pointeur
+
+Concepts clés :
+- Polymorphisme dynamique (runtime polymorphism)
+- Mot-clé `virtual`
+- Late binding vs early binding
+- Destructeur virtuel obligatoire pour héritage
+
+⭕ Exercice 01 : I don't want to set the world on fire
+
+Status : À COMMENCER
+
+Objectif :
+Ajouter composition avec la classe Brain
+Gérer allocation dynamique (new/delete)
+Implémenter deep copy (copie profonde)
+Comprendre les fuites mémoire
+
+Fichiers à rendre :
+Fichiers de l'exercice 00 + Brain.{h, hpp}, Brain.cpp
+
+Classe Brain :
+- Attribut privé : `std::string ideas[100]` (tableau de 100 idées)
+- Constructeur/Destructeur avec messages
+- Orthodox Canonical Form complète
+
+Modification Dog et Cat :
+- Ajout attribut privé : `Brain* brain`
+- Constructeur : `brain = new Brain();`
+- Destructeur : `delete brain;`
+- Copy constructor : copie profonde (créer un nouveau Brain)
+- Assignment operator : copie profonde (supprimer ancien, créer nouveau)
+
+Test principal attendu :
+```cpp
+const Animal* animals[10];
+for (int i = 0; i < 5; i++)
+    animals[i] = new Dog();
+for (int i = 5; i < 10; i++)
+    animals[i] = new Cat();
+
+for (int i = 0; i < 10; i++)
+    delete animals[i]; // Doit appeler destructeurs Dog/Cat
+```
+
+Deep copy vs Shallow copy :
+```cpp
+Dog basic;
+{
+    Dog tmp = basic; // Copie profonde requise !
+    // Si shallow copy : tmp et basic partagent le même Brain*
+    // À la fin du scope, tmp détruit le Brain
+    // basic a un pointeur vers Brain détruit → crash !
+}
+```
+
+Comportements importants :
+- Animal doit avoir destructeur **virtual** (`virtual ~Animal()`)
+- Sans destructeur virtual : `delete (Animal*)dog` n'appelle pas ~Dog()
+- Deep copy : créer un nouveau Brain, copier le contenu
+- Pas de fuites mémoire (vérifier avec valgrind)
+
+Concepts clés :
+- Composition (has-a relationship)
+- Allocation dynamique (new/delete)
+- Deep copy vs shallow copy
+- Destructeur virtuel obligatoire
+- Memory leaks
+- Rule of Three (constructor, destructor, assignment)
+
+⭕ Exercice 02 : Abstract class
+
+Status : À COMMENCER
+
+Objectif :
+Rendre Animal non-instanciable (classe abstraite)
+Utiliser pure virtual function
+Comprendre les interfaces en C++
+
+Fichiers à rendre :
+Fichiers de l'exercice 01 modifiés
+
+Modification de Animal :
+- Rendre `makeSound()` pure virtual : `virtual void makeSound() const = 0;`
+- Animal devient classe abstraite (non-instanciable)
+- `Animal test;` → erreur de compilation
+- `new Animal()` → erreur de compilation
+
+Comportements attendus :
+- Dog et Cat restent instanciables (implémentent makeSound())
+- Impossible de créer une instance d'Animal directement
+- Animal* pointeur reste valide (polymorphisme)
+- Tout le reste fonctionne comme ex01
+
+Optionnel (si mentionné dans sujet) :
+- Renommer Animal en AAnimal (convention pour classes abstraites)
+
+Concepts clés :
+- Pure virtual function (`= 0`)
+- Classe abstraite (abstract class)
+- Interface en C++
+- Pourquoi empêcher l'instanciation
+
+CRITÈRES D'ÉVALUATION (Barème officiel)
+
+Prérequis généraux :
+✅ Compilation avec c++ -Wall -Wextra -Werror
+✅ Norme C++98 (pas de C++11+)
+✅ Makefile avec flags appropriés
+✅ Pas de fonctions C (*alloc, *printf, free)
+✅ Pas de "using namespace" ou "friend"
+✅ Tests suffisants dans main
+⚠️ Pas de fonction dans les headers sauf templates
+⚠️ Un seul compilateur: c++
+
+Exercice 00 - Points clés évaluation :
+⬜ Tests suffisants (sinon → pas de note)
+⬜ Toutes les classes non-interface en Orthodox Canonical Form
+⬜ Classe Animal avec attribut `std::string type`
+⬜ Animal est instanciable et utilisable
+⬜ Dog et Cat héritent d'Animal
+⬜ Messages constructeur/destructeur clairs
+⬜ Attribut `type` initialisé correctement ("Dog", "Cat")
+⬜ `makeSound()` est **virtual** dans Animal
+⬜ `makeSound()` appelle la bonne fonction (Dog ou Cat)
+⬜ WrongAnimal et WrongCat sans `virtual` keyword
+⬜ WrongCat appelle WrongAnimal::makeSound() si utilisé comme WrongAnimal*
+
+Exercice 01 - Points clés évaluation :
+⬜ Tests suffisants (sinon → pas de note)
+⬜ Toutes les classes non-interface en Orthodox Canonical Form
+⬜ Classe Brain existe
+⬜ Dog et Cat ont attribut privé `Brain* brain`
+⬜ Brain n'est PAS dans Animal
+⬜ Brain a messages constructeur/destructeur
+⬜ Copie de Dog/Cat est **deep copy**
+⬜ Test de deep copy fonctionne (scope temporaire)
+⬜ Copy constructor fait deep copy
+⬜ Destructeur d'Animal est **virtual**
+⬜ Explication de ce qui se passe sans destructeur virtual
+⬜ Assignment operator fait deep copy
+⬜ Pas de fuites mémoire
+⬜ Canonical form vraiment implémenté (pas vide)
+
+Exercice 02 - Points clés évaluation :
+⬜ Tests suffisants (sinon → pas de note)
+⬜ Toutes les classes non-interface en Orthodox Canonical Form
+⬜ Animal existe (ou AAnimal)
+⬜ Animal::makeSound() est pure virtual : `virtual void makeSound() const = 0;`
+⬜ Le `= 0` est présent (obligatoire)
+⬜ Impossible d'instancier Animal (`Animal test;` → erreur compilation)
+⬜ Dog et Cat fonctionnent exactement comme ex01
+
+CONCEPTS THÉORIQUES À MAÎTRISER
+
+Polymorphisme (Subtype Polymorphism) :
+- Permet à un pointeur de classe base d'appeler les méthodes des classes dérivées
+- Nécessite le mot-clé `virtual`
+- Résolution à l'exécution (late binding / dynamic binding)
+
+Virtual keyword :
+```cpp
+class Animal {
+    virtual void makeSound() const; // Polymorphisme activé
+};
+class Dog : public Animal {
+    void makeSound() const; // Override (pas besoin de "virtual" mais recommandé)
+};
+
+Animal* a = new Dog();
+a->makeSound(); // Appelle Dog::makeSound() grâce à virtual
+```
+
+Sans virtual :
+```cpp
+class WrongAnimal {
+    void makeSound() const; // PAS virtual
+};
+class WrongCat : public WrongAnimal {
+    void makeSound() const;
+};
+
+WrongAnimal* w = new WrongCat();
+w->makeSound(); // Appelle WrongAnimal::makeSound() (early binding)
+```
+
+Destructeur virtuel :
+```cpp
+class Animal {
+    virtual ~Animal() {} // OBLIGATOIRE pour polymorphisme
+};
+
+Animal* a = new Dog();
+delete a; // Sans virtual ~Animal(), ne détruit que la partie Animal
+          // Avec virtual, appelle ~Dog() puis ~Animal()
+```
+
+Pure virtual function (= 0) :
+```cpp
+class Animal {
+    virtual void makeSound() const = 0; // Classe abstraite
+    // Pas d'implémentation dans Animal
+};
+// Animal a; → ERREUR : classe abstraite
+```
+
+Deep copy vs Shallow copy :
+```cpp
+// Shallow copy (MAUVAIS avec pointeurs)
+Dog& Dog::operator=(const Dog& rhs) {
+    brain = rhs.brain; // Les deux partagent le même Brain*
+    return *this;
+}
+
+// Deep copy (CORRECT)
+Dog& Dog::operator=(const Dog& rhs) {
+    if (this != &rhs) {
+        delete brain; // Supprimer l'ancien
+        brain = new Brain(*rhs.brain); // Créer une copie
+    }
+    return *this;
+}
+```
+
+Memory leaks :
+- Oublier `delete` après `new` → fuite mémoire
+- Vérifier avec `valgrind --leak-check=full ./program`
+- Destructeur virtuel obligatoire pour delete via pointeur base
+
+RESSOURCES RECOMMANDÉES
+
+Concepts C++ à réviser :
+- Virtual functions et vtable
+- Pure virtual functions
+- Abstract classes
+- Polymorphisme dynamique
+- Deep copy vs shallow copy
+- Memory management (new/delete)
+
+SUJET COMPLET DU MODULE
+
+Chapter IV
+Exercise 00: Polymorphism
+Exercise : 00
+Polymorphism
+Turn-in directory: ex00/
+Files to turn in: Makefile, main.cpp, *.cpp, *.{h, hpp}
+Forbidden functions: None
+
+For every exercise, you have to provide the most complete tests you can.
+Constructors and destructors of each class must display specific messages. Don't use the
+same message for all classes.
+
+Start by implementing a simple base class called Animal. It has one protected
+attribute:
+• std::string type;
+
+Implement a Dog class that inherits from Animal.
+Implement a Cat class that inherits from Animal.
+
+These two derived classes must set their type field depending on their name. Then,
+the Dog's type will be initialized to "Dog", and the Cat's type will be initialized to "Cat".
+The type of the Animal class can be left empty or set to the value of your choice.
+
+Every animal must be able to use the member function:
+makeSound()
+It will print an appropriate sound (cats don't bark).
+
+Running this code should print the specific sounds of the Dog and Cat classes, not
+the Animal's.
+
+int main()
+{
+const Animal* meta = new Animal();
+const Animal* j = new Dog();
+const Animal* i = new Cat();
+std::cout << j->getType() << " " << std::endl;
+std::cout << i->getType() << " " << std::endl;
+i->makeSound(); //will output the cat sound!
+j->makeSound();
+meta->makeSound();
+...
+return 0;
+}
+
+To ensure you understood how it works, implement a WrongCat class that inherits
+from a WrongAnimal class. If you replace the Animal and the Cat by the wrong ones
+in the code above, the WrongCat should output the WrongAnimal sound.
+
+Implement and turn in more tests than the ones given above.
+
+Chapter V
+Exercise 01: I don't want to set the world on fire
+Exercise : 01
+I don't want to set the world on fire
+Turn-in directory: ex01/
+Files to turn in: Files from previous exercise + *.cpp, *.{h, hpp}
+Forbidden functions: None
+
+Constructors and destructors of each class must display specific messages.
+
+Implement a Brain class. It contains an array of 100 std::string called ideas.
+This way, Dog and Cat will have a private Brain* attribute.
+
+Upon construction, Dog and Cat will create their Brain using new Brain();
+Upon destruction, Dog and Cat will delete their Brain.
+
+In your main function, create and fill an array of Animal objects. Half of it will
+be Dog objects and the other half will be Cat objects. At the end of your program
+execution, loop over this array and delete every Animal. You must delete directly dogs
+and cats as Animals. The appropriate destructors must be called in the expected order.
+
+Don't forget to check for memory leaks.
+
+A copy of a Dog or a Cat mustn't be shallow. Thus, you have to test that your copies
+are deep copies!
+
+int main()
+{
+const Animal* j = new Dog();
+const Animal* i = new Cat();
+delete j;//should not create a leak
+delete i;
+...
+return 0;
+}
+
+Implement and turn in more tests than the ones given above.
+
+Chapter VI
+Exercise 02: Abstract class
+Exercise : 02
+Abstract class
+Turn-in directory: ex02/
+Files to turn in: Files from previous exercise + *.cpp, *.{h, hpp}
+Forbidden functions: None
+
+Creating Animal objects doesn't make sense after all. It's true, they make no sound!
+To avoid any possible mistakes, the default Animal class should not be instantiable.
+Fix the Animal class so that nobody can instantiate it. Everything should work as before.
+
+If you want to, you can update the class name by adding an A prefix to Animal.
+
+NOTE PÉDAGOGIQUE
+
+Le CPP04 introduit le POLYMORPHISME DYNAMIQUE (Subtype Polymorphism) :
+- Virtual functions pour résolution à l'exécution
+- Pure virtual functions pour classes abstraites
+- Gestion mémoire avec pointeurs polymorphes
+- Deep copy avec allocation dynamique
+
+Progression pédagogique :
+- EX00 : Découverte du polymorphisme (virtual)
+- EX01 : Polymorphisme + gestion mémoire + deep copy
+- EX02 : Classes abstraites (pure virtual)
+
+Différence avec CPP03 :
+- CPP03 : Héritage simple, pas de virtual
+- CPP04 : Polymorphisme avec virtual, gestion mémoire complexe
+
+CRITÈRES D'ÉVALUATION - EVALUATION CHECKLIST
+
+Preliminary Tests
+
+If cheating is suspected, the evaluation stops here. Use the "Cheat" flag to report it.
+
+Prerequisites
+
+- Code doit compiler avec `c++` et flags `-Wall -Wextra -Werror`
+- Respecter la norme **C++98** (pas de C++11+)
+
+RED FLAGS :
+- ❌ Fonction implémentée dans un header (sauf templates)
+- ❌ Makefile compile sans les flags requis ou avec un autre compilateur que `c++`
+
+FORBIDDEN FUNCTION FLAGS :
+- ❌ Utilisation de fonctions C (*alloc, *printf, free)
+- ❌ Utilisation de fonction non autorisée
+- ❌ "using namespace" ou "friend" keyword
+- ❌ Librairies externes ou features C++11+
+
+Exercise 00: Polymorphism
+
+✅ Tests suffisants (sinon → pas de note)
+✅ Toutes classes non-interface en Orthodox Canonical Form (sinon → pas de note)
+
+**First check :**
+- ✅ Classe Animal avec attribut `std::string type`
+- ✅ Animal est instanciable et utilisable
+
+**Inheritance :**
+- ✅ Au moins deux classes héritent d'Animal : Cat et Dog
+- ✅ Messages constructeur/destructeur clairs
+- ✅ Ordre constructeur/destructeur correct
+
+**Easy derived class :**
+- ✅ Attribut `type` initialisé correctement pour chaque animal
+- ✅ Cat a `type = "Cat"`
+- ✅ Dog a `type = "Dog"`
+
+**Animal :**
+- ✅ `makeSound()` appelle toujours la fonction appropriée
+- ✅ `makeSound()` doit être **virtual** dans Animal
+- ✅ Signature : `virtual void makeSound() const;`
+- ✅ Mot-clé `virtual` est **obligatoire**
+
+**Wrong classes :**
+- ✅ WrongAnimal et WrongCat sans `virtual` keyword
+- ✅ WrongCat appelle WrongAnimal::makeSound() quand utilisé comme WrongAnimal*
+
+Exercise 01: I do not want to set the world on fire
+
+✅ Tests suffisants (sinon → pas de note)
+✅ Toutes classes non-interface en Orthodox Canonical Form (sinon → pas de note)
+
+**Concrete Animal :**
+- ✅ Classe Brain existe
+- ✅ Dog et Cat ont attribut privé `Brain*`
+- ✅ Attribut Brain n'est PAS dans Animal
+- ✅ Brain a messages spécifiques à la création/destruction
+
+**Concrete Brain :**
+- ✅ Copie de Dog/Cat est **deep copy**
+- ✅ Test de deep copy fonctionne (Dog tmp = basic dans un scope)
+- ✅ Si shallow copy, tmp et basic partagent le même Brain → crash
+- ✅ Copy constructor fait deep copy
+- ✅ Canonical form proprement implémenté
+
+**Destruction chaining :**
+- ✅ Destructeur d'Animal est **virtual**
+- ✅ Explication de ce qui se passe sans destructeur virtual
+- ✅ Test avec/sans virtual
+
+**Assignment and copy :**
+- ✅ Copy et assignment de Dog/Cat font deep copy
+- ✅ Deep copy = créer un nouveau Brain pour Dog/Cat
+- ✅ Canonical form vraiment implémenté (pas vide)
+- ✅ Rien n'est public sans raison
+- ✅ Code propre et simple
+
+Exercise 02: Abstract class
+
+✅ Tests suffisants (sinon → pas de note)
+✅ Toutes classes non-interface en Orthodox Canonical Form (sinon → pas de note)
+
+**Abstract class :**
+- ✅ Classe Animal existe (comme dans le sujet)
+- ✅ Animal::makeSound est pure virtual function
+- ✅ Signature : `virtual void makeSound() const = 0;`
+- ✅ Le `= 0` est **obligatoire**
+- ✅ Impossible d'instancier Animal
+- ✅ `Animal test;` donne erreur de compilation
+
+**Concrete Animal :**
+- ✅ Dog et Cat toujours présents
+- ✅ Fonctionnent exactement comme ex01
